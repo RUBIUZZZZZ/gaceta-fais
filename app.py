@@ -1,19 +1,18 @@
 from flask import Flask, render_template_string, request, redirect, url_for, send_from_directory
 from supabase import create_client, Client
 import os
-from datetime import datetime
 
 app = Flask(__name__)
 
-# --- CONEXIÓN A LA NUBE (SUPABASE) ---
-SUPABASE_URL = os.environ.get("https://ofqtsxsstkmutucgpnxf.supabase.co")
-SUPABASE_KEY = os.environ.get("sb_publishable_6cQCo2BgzpEqWsZlq7YDjQ_3btJxW7i")
+# --- CONEXIÓN A SUPABASE ---
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
 supabase: Client = None
 if SUPABASE_URL and SUPABASE_KEY:
     supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# --- PLANTILLA ÚNICA CON TU DISEÑO ---
+# --- PLANTILLA DEL DISEÑO ---
 PLANTILLA_GACETA = """
 <!DOCTYPE html>
 <html lang="es">
@@ -45,7 +44,7 @@ PLANTILLA_GACETA = """
         .comentario-autor { font-weight: bold; color: #BC955C; font-size: 14px; }
         .comentario-texto { margin: 5px 0 0 0; font-size: 14px; color: #333; }
         .form-respuesta { margin-top: 15px; display: flex; flex-direction: column; gap: 8px; }
-        .input-resp { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; }
+        .input-resp : padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; }
         .btn-resp { background-color: #BC955C; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; align-self: flex-end; }
         .btn-resp:hover { background-color: #9E7B43; }
     </style>
@@ -100,12 +99,12 @@ PLANTILLA_GACETA = """
                             </div>
                         {% endfor %}
                     {% else %}
-                        <p style="font-size: 13px; color: #777; italic; margin: 5px 0;">No hay respuestas en este comunicado aún.</p>
+                        <p style="font-size: 13px; color: #777; font-style: italic; margin: 5px 0;">No hay respuestas en este comunicado aún.</p>
                     {% endif %}
                     
                     <form class="form-respuesta" method="POST" action="/responder/{{ aviso['info']['id'] }}">
-                        <input class="input-resp" type="text" name="nombre" placeholder="Tu nombre o comunidad" required>
-                        <input class="input-resp" type="text" name="comentario" placeholder="Escribe tu duda o respuesta aquí..." required>
+                        <input style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;" type="text" name="nombre" placeholder="Tu nombre o comunidad" required>
+                        <input style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;" type="text" name="comentario" placeholder="Escribe tu duda o respuesta aquí..." required>
                         <button class="btn-resp" type="submit">Enviar Respuesta ↩️</button>
                     </form>
                 </div>
@@ -123,7 +122,7 @@ def obtener_datos_gaceta():
         res_avisos = supabase.table("avisos").select("*").order("id", desc=True).execute()
         avisos = res_avisos.data
         
-        res_respuestas = supabase.table("respuestas").select("*").order("id", any_order=True).execute()
+        res_respuestas = supabase.table("respuestas").select("*").order("id").execute()
         todas_respuestas = res_respuestas.data
         
         datos_avisos = []
@@ -155,7 +154,6 @@ def publicar():
         titulo = request.form["titulo"]
         contenido = request.form["contenido"]
         try:
-            # Quitamos la variable "fecha" porque Supabase la genera en automático con NOW()
             supabase.table("avisos").insert({"titulo": titulo, "contenido": contenido}).execute()
         except Exception as e:
             print("Error al publicar:", e)
@@ -166,9 +164,8 @@ def responder(aviso_id):
     if supabase:
         nombre = request.form["nombre"]
         comentario = request.form["comentario"]
-        fecha_hoy = datetime.now().strftime("%d/%m/%Y %H:%M")
         try:
-            supabase.table("respuestas").insert({"aviso_id": aviso_id, "fecha": fecha_hoy, "nombre": nombre, "comentario": comentario}).execute()
+            supabase.table("respuestas").insert({"aviso_id": aviso_id, "nombre": nombre, "comentario": comentario}).execute()
         except Exception as e:
             print("Error al responder:", e)
     return redirect(request.referrer or url_for('inicio'))
@@ -177,7 +174,6 @@ def responder(aviso_id):
 def eliminar(aviso_id):
     if supabase:
         try:
-            supabase.table("respuestas").delete().eq("aviso_id", aviso_id).execute()
             supabase.table("avisos").delete().eq("id", aviso_id).execute()
         except Exception as e:
             print("Error al eliminar:", e)
