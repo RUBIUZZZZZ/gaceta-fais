@@ -4,6 +4,7 @@ import os
 from datetime import datetime
 
 app = Flask(__name__)
+inicializar_db()
 
 # En internet la base de datos se guardará de forma segura en el servidor
 DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fais_comunidad_v2.db")
