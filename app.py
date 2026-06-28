@@ -1,41 +1,19 @@
 from flask import Flask, render_template_string, request, redirect, url_for, send_from_directory
-import sqlite3
+from supabase import create_client, Client
 import os
 from datetime import datetime
 
 app = Flask(__name__)
 
-# En internet la base de datos se guardará de forma segura en el servidor
-DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fais_comunidad_v2.db")
+# --- CONEXIÓN A LA NUBE (SUPABASE) ---
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
-def conectar_db():
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-    return conn
+supabase: Client = None
+if SUPABASE_URL and SUPABASE_KEY:
+    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-def inicializar_db():
-    with conectar_db() as conn:
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS avisos (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                fecha TEXT NOT NULL,
-                titulo TEXT NOT NULL,
-                contenido TEXT NOT NULL
-            )
-        """)
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS respuestas (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                aviso_id INTEGER NOT NULL,
-                fecha TEXT NOT NULL,
-                nombre TEXT NOT NULL,
-                comentario TEXT NOT NULL,
-                FOREIGN KEY (aviso_id) REFERENCES avisos(id)
-            )
-        """)
-        conn.commit()
-
-# --- PLANTILLA ÚNICA ---
+# --- PLANTILLA ÚNICA CON TU DISEÑO ---
 PLANTILLA_GACETA = """
 <!DOCTYPE html>
 <html lang="es">
@@ -138,62 +116,73 @@ PLANTILLA_GACETA = """
 </html>
 """
 
-@app.route("/")
-def inicio():
-    with conectar_db() as conn:
-        avisos = conn.execute("SELECT * FROM avisos ORDER BY id DESC").fetchall()
+def obtener_datos_gaceta():
+    if not supabase:
+        return []
+    try:
+        res_avisos = supabase.table("avisos").select("*").order("id", desc=True).execute()
+        avisos = res_avisos.data
+        
+        res_respuestas = supabase.table("respuestas").select("*").order("id", any_order=True).execute()
+        todas_respuestas = res_respuestas.data
+        
         datos_avisos = []
         for aviso in avisos:
-            respuestas = conn.execute("SELECT * FROM respuestas WHERE aviso_id = ? ORDER BY id ASC", (aviso["id"],)).fetchall()
-            datos_avisos.append({"info": aviso, "respuestas": respuestas})
-    return render_template_string(PLANTILLA_GACETA, datos_avisos=datos_avisos, es_admin=False)
+            respuestas_aviso = [r for r in todas_respuestas if r["aviso_id"] == aviso["id"]]
+            datos_avisos.append({"info": aviso, "respuestas": respuestas_aviso})
+        return datos_avisos
+    except Exception as e:
+        print("Error obteniendo datos:", e)
+        return []
+
+@app.route("/")
+def inicio():
+    datos = obtener_datos_gaceta()
+    return render_template_string(PLANTILLA_GACETA, datos_avisos=datos, es_admin=False)
 
 @app.route("/admin_fais_secreto")
 def admin():
-    with conectar_db() as conn:
-        avisos = conn.execute("SELECT * FROM avisos ORDER BY id DESC").fetchall()
-        datos_avisos = []
-        for aviso in avisos:
-            respuestas = conn.execute("SELECT * FROM respuestas WHERE aviso_id = ? ORDER BY id ASC", (aviso["id"],)).fetchall()
-            datos_avisos.append({"info": aviso, "respuestas": respuestas})
-    return render_template_string(PLANTILLA_GACETA, datos_avisos=datos_avisos, es_admin=True)
+    datos = obtener_datos_gaceta()
+    return render_template_string(PLANTILLA_GACETA, datos_avisos=datos, es_admin=True)
 
-# CORRECCIÓN AQUÍ: Servir la imagen directamente desde la raíz en Render
 @app.route("/portada.jpg")
 def servir_portada():
     return send_from_directory(os.path.abspath(os.path.dirname(__file__)), 'portada.jpg')
 
 @app.route("/publicar", methods=["POST"])
 def publicar():
-    titulo = request.form["titulo"]
-    contenido = request.form["contenido"]
-    fecha_hoy = datetime.now().strftime("%d/%m/%Y")
-    with conectar_db() as conn:
-        conn.execute("INSERT INTO avisos (fecha, titulo, contenido) VALUES (?, ?, ?)", (fecha_hoy, titulo, contenido))
-        conn.commit()
+    if supabase:
+        titulo = request.form["titulo"]
+        contenido = request.form["contenido"]
+        fecha_hoy = datetime.now().strftime("%d/%m/%Y")
+        try:
+            supabase.table("avisos").insert({"fecha": fecha_hoy, "titulo": titulo, "contenido": contenido}).execute()
+        except Exception as e:
+            print("Error al publicar:", e)
     return redirect(url_for('admin'))
 
 @app.route("/responder/<int:aviso_id>", methods=["POST"])
 def responder(aviso_id):
-    nombre = request.form["nombre"]
-    comentario = request.form["comentario"]
-    fecha_hoy = datetime.now().strftime("%d/%m/%Y %H:%M")
-    with conectar_db() as conn:
-        conn.execute("INSERT INTO respuestas (aviso_id, fecha, nombre, comentario) VALUES (?, ?, ?, ?)", (aviso_id, fecha_hoy, nombre, comentario))
-        conn.commit()
+    if supabase:
+        nombre = request.form["nombre"]
+        comentario = request.form["comentario"]
+        fecha_hoy = datetime.now().strftime("%d/%m/%Y %H:%M")
+        try:
+            supabase.table("respuestas").insert({"aviso_id": aviso_id, "fecha": fecha_hoy, "nombre": nombre, "comentario": comentario}).execute()
+        except Exception as e:
+            print("Error al responder:", e)
     return redirect(request.referrer or url_for('inicio'))
 
 @app.route("/eliminar/<int:aviso_id>", methods=["POST"])
 def eliminar(aviso_id):
-    with conectar_db() as conn:
-        conn.execute("DELETE FROM respuestas WHERE aviso_id = ?", (aviso_id,))
-        conn.execute("DELETE FROM avisos WHERE id = ?", (aviso_id,))
-        conn.commit()
+    if supabase:
+        try:
+            supabase.table("respuestas").delete().eq("aviso_id", aviso_id).execute()
+            supabase.table("avisos").delete().eq("id", aviso_id).execute()
+        except Exception as e:
+            print("Error al eliminar:", e)
     return redirect(url_for('admin'))
 
-inicializar_db()
 if __name__ == "__main__":
-    inicializar_db()
-    # Cambiado para que corra de forma automática en los servidores de Render
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
