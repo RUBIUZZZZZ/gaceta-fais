@@ -5,7 +5,7 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-SUPABASE_URL = "https://ofqtsxsstkmutucgpnxf.supabase.co/rest/v1/"
+SUPABASE_URL = "https://ofqtsxsstkmutucgpnxf.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mcXRzeHNzdGttdXR1Y2dwbnhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2MDkxNTYsImV4cCI6MjA5ODE4NTE1Nn0.bxgSu59FjrbH3Q6fuMA2sSfA99A-hUQQ2BdFAVJOFsE"
 
 supabase: Client = None
