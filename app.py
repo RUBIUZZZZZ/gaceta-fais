@@ -6,8 +6,8 @@ from datetime import datetime
 app = Flask(__name__)
 
 # --- CONEXIÓN A LA NUBE (SUPABASE) ---
-SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+SUPABASE_URL = os.environ.get("https://ofqtsxsstkmutucgpnxf.supabase.co")
+SUPABASE_KEY = os.environ.get("sb_publishable_6cQCo2BgzpEqWsZlq7YDjQ_3btJxW7i")
 
 supabase: Client = None
 if SUPABASE_URL and SUPABASE_KEY:
