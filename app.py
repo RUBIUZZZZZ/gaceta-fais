@@ -4,7 +4,6 @@ import os
 from datetime import datetime
 
 app = Flask(__name__)
-inicializar_db()
 
 # En internet la base de datos se guardará de forma segura en el servidor
 DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fais_comunidad_v2.db")
@@ -191,6 +190,7 @@ def eliminar(aviso_id):
         conn.commit()
     return redirect(url_for('admin'))
 
+inicializar_db()
 if __name__ == "__main__":
     inicializar_db()
     # Cambiado para que corra de forma automática en los servidores de Render
