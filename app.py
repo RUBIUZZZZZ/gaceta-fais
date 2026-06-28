@@ -135,9 +135,9 @@ def obtener_datos_gaceta():
 
 @app.route("/")
 def inicio():
-    datos = obtener_datos_gaceta()
+    datos = obtener_datos_gaceta()  # Esta función debe hacer el select de supabase
     return render_template_string(PLANTILLA_GACETA, datos_avisos=datos, es_admin=False)
-
+    
 @app.route("/admin_fais_secreto")
 def admin():
     datos = obtener_datos_gaceta()
@@ -150,20 +150,24 @@ def servir_portada():
 @app.route("/publicar", methods=["POST"])
 def publicar():
     if supabase:
-        titulo = request.form["titulo"]
-        contenido = request.form["contenido"]
-        # Generamos la fecha exacta de México en texto para Supabase
-        fecha_actual = datetime.now().strftime("%DD/%MM/%YYYY")
+        titulo = request.form.get("titulo")
+        contenido = request.form.get("contenido")
+        
+        # Formato correcto para el día/mes/año en texto
+        from datetime import datetime
+        fecha_actual = datetime.now().strftime("%d/%m/%Y")
         
         try:
+            # Enviamos los campos exactos que creamos en la base de datos
             supabase.table("avisos").insert({
                 "titulo": titulo, 
                 "contenido": contenido,
                 "fecha_texto": fecha_actual
             }).execute()
         except Exception as e:
-            print("Error al publicar:", e)
+            print("Error detectado al insertar en Supabase:", e)
             
+    # Esto obliga a la página a regresar al panel de administrador y recargar
     return redirect("/admin_fais_secreto")
     
 @app.route("/responder/<int:aviso_id>", methods=["POST"])
