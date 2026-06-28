@@ -154,9 +154,9 @@ def publicar():
     if supabase:
         titulo = request.form["titulo"]
         contenido = request.form["contenido"]
-        fecha_hoy = datetime.now().strftime("%d/%m/%Y")
         try:
-            supabase.table("avisos").insert({"fecha": fecha_hoy, "titulo": titulo, "contenido": contenido}).execute()
+            # Quitamos la variable "fecha" porque Supabase la genera en automático con NOW()
+            supabase.table("avisos").insert({"titulo": titulo, "contenido": contenido}).execute()
         except Exception as e:
             print("Error al publicar:", e)
     return redirect(url_for('admin'))
