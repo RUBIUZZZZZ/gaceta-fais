@@ -44,7 +44,7 @@ PLANTILLA_GACETA = """
         .comentario-autor { font-weight: bold; color: #BC955C; font-size: 14px; }
         .comentario-texto { margin: 5px 0 0 0; font-size: 14px; color: #333; }
         .form-respuesta { margin-top: 15px; display: flex; flex-direction: column; gap: 8px; }
-        .input-resp : padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; }
+        .input-resp { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; }
         .btn-resp { background-color: #BC955C; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; align-self: flex-end; }
         .btn-resp:hover { background-color: #9E7B43; }
     </style>
