@@ -1,6 +1,7 @@
 from flask import Flask, render_template_string, request, redirect, url_for, send_from_directory
 from supabase import create_client, Client
 import os
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -151,12 +152,20 @@ def publicar():
     if supabase:
         titulo = request.form["titulo"]
         contenido = request.form["contenido"]
+        # Generamos la fecha exacta de México en texto para Supabase
+        fecha_actual = datetime.now().strftime("%DD/%MM/%YYYY")
+        
         try:
-            supabase.table("avisos").insert({"titulo": titulo, "contenido": contenido}).execute()
+            supabase.table("avisos").insert({
+                "titulo": titulo, 
+                "contenido": contenido,
+                "fecha_texto": fecha_actual
+            }).execute()
         except Exception as e:
             print("Error al publicar:", e)
-    return redirect(url_for('admin'))
-
+            
+    return redirect("/admin_fais_secreto")
+    
 @app.route("/responder/<int:aviso_id>", methods=["POST"])
 def responder(aviso_id):
     if supabase:
