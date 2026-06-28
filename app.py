@@ -4,8 +4,8 @@ import os
 
 app = Flask(__name__)
 
-SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+SUPABASE_URL = "https://ofqtsxsstmutucgpnxf.supabase.co"
+SUPABASE_KEY = "sb_publishable_6cQCo2BgzpEqWsZlq7YdjQ_3btJxW7i"
 
 supabase: Client = None
 if SUPABASE_URL and SUPABASE_KEY:
