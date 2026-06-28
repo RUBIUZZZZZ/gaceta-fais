@@ -5,7 +5,7 @@ import os
 app = Flask(__name__)
 
 SUPABASE_URL = "https://ofqtsxsstmutucgpnxf.supabase.co"
-SUPABASE_KEY = "sb_publishable_6cQCo2BgzpEqWsZlq7YdjQ_3btJxW7i"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mcXRzeHNzdGttdXR1Y2dwbnhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2MDkxNTYsImV4cCI6MjA5ODE4NTE1Nn0.bxgSu59FjrbH3Q6fuMA2sSfA99A-hUQQ2BdFAVJOFsE"
 
 supabase: Client = None
 if SUPABASE_URL and SUPABASE_KEY:
