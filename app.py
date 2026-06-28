@@ -4,7 +4,6 @@ import os
 
 app = Flask(__name__)
 
-# --- CONEXIÓN A SUPABASE ---
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
@@ -12,7 +11,6 @@ supabase: Client = None
 if SUPABASE_URL and SUPABASE_KEY:
     supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# --- PLANTILLA DEL DISEÑO ---
 PLANTILLA_GACETA = """
 <!DOCTYPE html>
 <html lang="es">
@@ -77,7 +75,7 @@ PLANTILLA_GACETA = """
             <div class="aviso-card">
                 <div class="aviso-header">
                     <div>
-                        <div class="aviso-fecha">📅 Publicado el: {{ aviso['info']['fecha'] }}</div>
+                        <div class="aviso-fecha">📅 Publicado el: {{ aviso['info']['fecha_texto'] }}</div>
                         <div class="aviso-titulo">{{ aviso['info']['titulo'] }}</div>
                     </div>
                     {% if es_admin %}
@@ -94,7 +92,7 @@ PLANTILLA_GACETA = """
                         {% for resp in aviso['respuestas'] %}
                             <div class="comentario-item">
                                 <span class="comentario-autor">👤 {{ resp['nombre'] }}</span> 
-                                <span style="font-size: 11px; color:#999;">({{ resp['fecha'] }})</span>
+                                <span style="font-size: 11px; color:#999;">({{ resp['fecha_texto'] }})</span>
                                 <p class="comentario-texto">{{ resp['comentario'] }}</p>
                             </div>
                         {% endfor %}
@@ -103,8 +101,8 @@ PLANTILLA_GACETA = """
                     {% endif %}
                     
                     <form class="form-respuesta" method="POST" action="/responder/{{ aviso['info']['id'] }}">
-                        <input style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;" type="text" name="nombre" placeholder="Tu nombre o comunidad" required>
-                        <input style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;" type="text" name="comentario" placeholder="Escribe tu duda o respuesta aquí..." required>
+                        <input class="input-resp" type="text" name="nombre" placeholder="Tu nombre o comunidad" required>
+                        <input class="input-resp" type="text" name="comentario" placeholder="Escribe tu duda o respuesta aquí..." required>
                         <button class="btn-resp" type="submit">Enviar Respuesta ↩️</button>
                     </form>
                 </div>
