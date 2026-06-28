@@ -1,4 +1,4 @@
-from flask import Flask, render_template_string, request, redirect, url_for
+from flask import Flask, render_template_string, request, redirect, url_for, send_from_directory
 import sqlite3
 import os
 from datetime import datetime
@@ -158,9 +158,10 @@ def admin():
             datos_avisos.append({"info": aviso, "respuestas": respuestas})
     return render_template_string(PLANTILLA_GACETA, datos_avisos=datos_avisos, es_admin=True)
 
+# CORRECCIÓN AQUÍ: Servir la imagen directamente desde la raíz en Render
 @app.route("/portada.jpg")
 def servir_portada():
-    return redirect(url_for('static', filename='portada.jpg'))
+    return send_from_directory(os.path.abspath(os.path.dirname(__file__)), 'portada.jpg')
 
 @app.route("/publicar", methods=["POST"])
 def publicar():
